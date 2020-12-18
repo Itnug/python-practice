@@ -14,8 +14,9 @@
 
 from timeit import timeit
 from itertools import count
-import numpy as np
 from tqdm import tqdm
+
+import numpy as np
 import cProfile
 
 
@@ -53,11 +54,10 @@ def prime_factorize(n, primes_list):
     return prime_factors
 
 
-def phi(n, primes_list):
-    prime_factors = prime_factorize(n, primes_list)
-    product = 1
-    for p, k in prime_factors:
-        product *= (p**(k-1)) * (p - 1)
+def phi(n, prime_factors):
+    product = n
+    for p in prime_factors:
+        product = (product * (p - 1)) // p
     return product
 
 
@@ -80,7 +80,8 @@ def main(max_n):
             continue
         if np.any(n % skip_list == 0):
             continue
-        phi_n = phi(n, primes_list)
+        prime_factors = prime_factorize(n, primes_list)
+        phi_n = phi(n, prime_factors)
         if is_perm(n, phi_n):
             m = n / phi_n
             if m < min_m:
@@ -90,12 +91,44 @@ def main(max_n):
     return min_n
 
 
+def main2(max_n):
+    # skip lower primes which have obvious high n/phi(n)
+    lower_bound = 2000
+    upper_bound = max_n // lower_bound
+
+    primes_list = []
+
+    for p in primes():
+        if p > upper_bound:
+            break
+        elif p > lower_bound:
+            primes_list.append(p)
+
+    min_n = 0
+    min_m = 2
+    for i, factor1 in enumerate(primes_list):
+        for factor2 in primes_list[i+1:]:
+            n = factor1 * factor2
+            if n > max_n:
+                break
+            factors = (factor1, factor2)
+            phi_n = phi(n, factors)
+            if is_perm(n, phi_n):
+                m = n / phi_n
+                if m < min_m:
+                    min_m = m
+                    min_n = n
+                    print(factors, n, phi_n, m)
+
+    return min_n
+
+
 def T1():
-    print("answer =", main(10000000))
+    print("answer =", main2(10000000))
 
 
-with cProfile.Profile() as pr:
+with cProfile.Profile(builtins=False) as pr:
     t1 = timeit(T1, number=1)
     print(t1)
 
-pr.print_stats(sort='cumtime')
+pr.print_stats(sort='tottime')
