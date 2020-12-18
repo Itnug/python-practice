@@ -37,21 +37,19 @@ def is_perm(a, b):
     return sorted(str(a)) == sorted(str(b))
 
 
-def prime_factorize(n, primes_list):
-    prime_factors = []
-    i = 0
-    while n != 1:
-        c = 0
-        p = primes_list[i]
-        i += 1
-        while n % p == 0:
-            c += 1
-            n //= p
+def get_prime_factors(n, primes_list):
+    p_array = []
+    for p in primes_list:
+        if p * p > n:
+            break
 
-        if c > 0:
-            prime_factors.append((p, c))
-
-    return prime_factors
+        if n % p == 0:
+            p_array.append(p)
+            while n % p == 0:
+                n = n // p
+    if n > 1:
+        p_array.append(n)
+    return p_array
 
 
 def phi(n, prime_factors):
@@ -80,7 +78,7 @@ def main(max_n):
             continue
         if np.any(n % skip_list == 0):
             continue
-        prime_factors = prime_factorize(n, primes_list)
+        prime_factors = get_prime_factors(n, primes_list)
         phi_n = phi(n, prime_factors)
         if is_perm(n, phi_n):
             m = n / phi_n
@@ -124,11 +122,12 @@ def main2(max_n):
 
 
 def T1():
-    print("answer =", main2(10000000))
+    print("answer =", main(10000000))
 
 
-with cProfile.Profile(builtins=False) as pr:
-    t1 = timeit(T1, number=1)
-    print(t1)
+if __name__ == '__main__':
+    with cProfile.Profile(builtins=False) as pr:
+        t1 = timeit(T1, number=1)
+        print(t1)
 
-pr.print_stats(sort='tottime')
+    pr.print_stats(sort='tottime')

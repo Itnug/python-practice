@@ -4,72 +4,12 @@ from itertools import count, takewhile, combinations
 from math import gcd, sqrt
 from collections import deque
 from tqdm import tqdm
-
-
-def primes():
-    yield 2
-    mem = {4: [2]}
-    for i in count(3):
-        if i in mem:
-            for k in mem[i]:
-                mem.setdefault(i + k, []).append(k)
-            del mem[i]
-        else:
-            yield i
-            mem[i + i] = [i]
-
-
-def primes2():
-    yield 2
-    mem = {}
-    for i in count(3, 2):
-        if i in mem:
-            for k in mem[i]:
-                mem.setdefault(i + k, []).append(k)
-            del mem[i]
-        else:
-            yield i
-            mem[i + i + i] = [i + i]
-
-
-def prime_factors(n):
-    p_array = []
-    for p in primes():
-        if n % p == 0:
-            p_array.append(p)
-            while n % p == 0:
-                n = n // p
-        if n == 1:
-            break
-    return np.array(p_array)
-
-
-def divisible_by_any(n, p_array):
-    return np.any(n % p_array == 0)
-
-
+from project_euler.p70 import primes, phi, get_prime_factors
+import cProfile
 # numerator = 1: denominator ranges from 2 to x (inclusive)
 # numerator = 2: denominator belongs to {all odd numbers between 3 and x inclusive
 # more generally numerator = y: denominator not divisible by prime factors of y
 
-# def proper_fractions_count(x):
-#     c = x - 1 + ((x - 1) // 2)
-#     prime_gen = primes()
-#     p = next(prime_gen)
-#     for numerator in range(3, x):
-#         # for denominator in range(numerator + 1, x + 1):
-#         #     if divisible_by_any(denominator, prime_factors(numerator)):
-#         #         continue
-#         #     c += 1
-#         if numerator >
-#         if numerator % 2 == 0:
-#             n_temp = numerator // 2
-#             c += (np.gcd(np.arange(numerator + 1, x + 1, 2), n_temp) == 1).sum()
-#         else:
-#             c += (np.gcd(np.arange(numerator + 1, x + 1, 2), numerator) == 1).sum()
-#             c += (np.gcd(np.arange(numerator + 2, x + 1, 2), numerator) == 1).sum()
-#
-#     return c
 
 def proper_fractions_count_1(x):
     c = 0
@@ -119,7 +59,7 @@ def proper_fractions_count_3(x):
 
 
 def proper_fractions_count_4(denom_max):
-    prime_gen = primes2()
+    prime_gen = primes()
     next(prime_gen)
     one_prime = next(prime_gen)
     p_queue = deque()
@@ -234,59 +174,9 @@ def proper_fractions_count(x):
             one_prime = next(prime_gen)
             continue
 
-        temp = denominator
-        p_index = 0
-        prime_factors = []
-        while temp != 1:
-            if temp % p_list[p_index] == 0:
-                temp = remove_prime(temp, p_list[p_index])
-                prime_factors.append(p_list[p_index])
-            p_index += 1
+        prime_factors = get_prime_factors(denominator, p_list)
+        total += phi(denominator, prime_factors)
 
-        len_prime_factors = len(prime_factors)
-        if len_prime_factors == 1:
-            total += denominator - denominator // prime_factors[0]
-            continue
-
-        if len_prime_factors == 2:
-            total += denominator - sum(denominator // factor for factor in prime_factors) \
-                     + denominator // prime_factors[0] // prime_factors[1]
-            continue
-
-        if len_prime_factors == 3:
-            total += denominator - sum(denominator // factor for factor in prime_factors) \
-                     + sum(denominator // f1 // f2 for f1, f2 in combinations(prime_factors, 2)) \
-                     - sum(denominator // f1 // f2 // f3 for f1, f2, f3 in combinations(prime_factors, 3))
-            continue
-
-        if len_prime_factors == 4:
-            total += denominator - sum(denominator // factor for factor in prime_factors) \
-                     + sum(denominator // f1 // f2 for f1, f2 in combinations(prime_factors, 2)) \
-                     - sum(denominator // f1 // f2 // f3 for f1, f2, f3 in combinations(prime_factors, 3)) \
-                     + sum(denominator // f1 // f2 // f3 // f4 for f1, f2, f3, f4 in combinations(prime_factors, 4))
-            continue
-
-        if len_prime_factors == 5:
-            total += denominator - sum(denominator // factor for factor in prime_factors) \
-                     + sum(denominator // f1 // f2 for f1, f2 in combinations(prime_factors, 2)) \
-                     - sum(denominator // f1 // f2 // f3 for f1, f2, f3 in combinations(prime_factors, 3)) \
-                     + sum(denominator // f1 // f2 // f3 // f4 for f1, f2, f3, f4 in combinations(prime_factors, 4)) \
-                     - sum(
-                denominator // f1 // f2 // f3 // f4 // f5 for f1, f2, f3, f4, f5 in combinations(prime_factors, 5))
-            continue
-
-        if len_prime_factors == 6:
-            total += denominator - sum(denominator // factor for factor in prime_factors) \
-                     + sum(denominator // f1 // f2 for f1, f2 in combinations(prime_factors, 2)) \
-                     - sum(denominator // f1 // f2 // f3 for f1, f2, f3 in combinations(prime_factors, 3)) \
-                     + sum(denominator // f1 // f2 // f3 // f4 for f1, f2, f3, f4 in combinations(prime_factors, 4)) \
-                     - sum(
-                denominator // f1 // f2 // f3 // f4 // f5 for f1, f2, f3, f4, f5 in combinations(prime_factors, 5)) \
-                     + sum(denominator // f1 // f2 // f3 // f4 // f5 // f6 for f1, f2, f3, f4, f5, f6 in
-                           combinations(prime_factors, 6))
-            continue
-        print(denominator, prime_factors)
-        total += int((np.gcd(np.arange(1, denominator), denominator) == 1).sum())
     return total
 
 
@@ -307,15 +197,20 @@ def sub_count(denominator, factor, h):
 # 1000=304191
 # 10000=30397485
 # 100000=3039650753
-# 1000000=? solved
+# 1000000=? solved 303963552391
 
 
 def T1():
     print(proper_fractions_count(1000000))
 
 
-t1 = timeit(T1, number=1)
-print(t1)
+if __name__ == '__main__':
+    with cProfile.Profile(builtins=False) as pr:
+        t1 = timeit(T1, number=1)
+        print(t1)
+
+    pr.print_stats(sort='tottime')
+
 
 # 1/2
 # 1/3  2/3
